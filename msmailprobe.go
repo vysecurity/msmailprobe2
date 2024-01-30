@@ -45,7 +45,7 @@ func main() {
 
 
 	if len(os.Args) <= 1 {
-		fmt.Println("~~MSMailProbe v1.001~~")
+		fmt.Println("~~MSMailProbe v2.00~~")
 		fmt.Println("Supply either the identify, userenum, or examples command for further assistance.\n")
 		fmt.Println("View examples:")
 		fmt.Println("	./msmailprobe examples")
@@ -612,7 +612,7 @@ func webRequestCodeResponse(URI string) int {
 		Transport: tr,
 	}
 	req, err := http.NewRequest("GET", URI, nil)
-	req.Header.Set("User-Agent", "Mozilla/5.0 (iPhone; CPU iPhone OS 17_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Mobile/15E148 Safari/604.1")
+	req.Header.Set("User-Agent", "Mozilla/5.0 (iPhone; CPU iPhone OS 11_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/11.0 Mobile/15E148 Safari/604.1")
 	resp, err := client.Do(req)
 	if err != nil {
 		return 0
