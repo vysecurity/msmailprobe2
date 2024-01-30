@@ -208,19 +208,23 @@ func harvestInternalDomain(host string, outputDomain bool) string {
 	}
 	ntlmResponse := resp.Header.Get("WWW-Authenticate")
 	data := strings.Split(ntlmResponse, " ")
+	
 	base64DecodedResp, err := b64.StdEncoding.DecodeString(data[1])
 	if err != nil {
 		fmt.Println("Unable to parse NTLM response for internal domain name")
 	}
 
+	
 	var continueAppending bool
 	var internalDomainDecimal []byte
-	for _, decimalValue := range base64DecodedResp {
+	var endcount int
+	for count, decimalValue := range base64DecodedResp {
 		if decimalValue == 0 {
 			continue
 		}
 		if decimalValue == 2 {
 			continueAppending = false
+			endcount = count
 		}
 		if continueAppending == true {
 			internalDomainDecimal = append(internalDomainDecimal, decimalValue)
@@ -230,10 +234,87 @@ func harvestInternalDomain(host string, outputDomain bool) string {
 			continue
 		}
 	}
+
+	var record bool
+	var hostnameDecimal []byte
+
+	for i := endcount+2; i <= len(base64DecodedResp)-1; i++ {
+		if record == false {
+			if (base64DecodedResp[i-2] == 1 && base64DecodedResp[i-1] == 0 ) {
+				record = true
+			}
+		}
+		if record == true {
+			if (base64DecodedResp[i] == 0){
+				continue
+			}
+			if (base64DecodedResp[i] == 4){
+				endcount = i
+				break
+			}
+			hostnameDecimal = append(hostnameDecimal, base64DecodedResp[i])
+		}
+	}
+
+	var domainfqdndecimal []byte
+
+	for i := endcount+2; i <= len(base64DecodedResp)-1; i++ {
+		if record == true {
+			if (base64DecodedResp[i] == 0){
+				continue
+			}
+			if (base64DecodedResp[i] == 3){
+				endcount = i
+				break
+			}
+			domainfqdndecimal = append(domainfqdndecimal, base64DecodedResp[i])
+		}
+	}
+
+	var hostnamefqdndecimal []byte
+
+	for i := endcount+2; i <= len(base64DecodedResp)-1; i++ {
+		if record == true {
+			if (base64DecodedResp[i] == 0){
+				continue
+			}
+			if (base64DecodedResp[i] == 5){
+				endcount = i
+				break
+			}
+			hostnamefqdndecimal = append(hostnamefqdndecimal, base64DecodedResp[i])
+		}
+	}
+
+	var treefqdndecimal []byte
+
+	for i := endcount+2; i <= len(base64DecodedResp)-1; i++ {
+		if record == true {
+			if (base64DecodedResp[i] == 0){
+				continue
+			}
+			if (base64DecodedResp[i] == 7){
+				endcount = i
+				break
+			}
+			treefqdndecimal = append(treefqdndecimal, base64DecodedResp[i])
+		}
+	}
+
+
 	if outputDomain == true {
 		fmt.Printf(BrightGreen, "[+] ")
 		fmt.Print("Internal Domain: ")
 		fmt.Printf(BrightGreen, string(internalDomainDecimal)+ "\n")
+		fmt.Printf(BrightGreen, "[+] ")
+		fmt.Print("Hostname: ")
+		fmt.Printf(BrightGreen, string(hostnameDecimal)+ "\n")
+		fmt.Printf(BrightGreen, "[+] ")
+		fmt.Print("FQDN Domain: ")
+		fmt.Printf(BrightGreen, string(domainfqdndecimal)+ "\n")
+		fmt.Printf(BrightGreen, "[+] ")
+		fmt.Print("Forest FQDN: ")
+		fmt.Printf(BrightGreen, string(treefqdndecimal)+ "\n")
 	}
 	return string(internalDomainDecimal)
 }
@@ -531,7 +612,7 @@ func webRequestCodeResponse(URI string) int {
 		Transport: tr,
 	}
 	req, err := http.NewRequest("GET", URI, nil)
-	req.Header.Set("User-Agent", "Mozilla/5.0 (iPhone; CPU iPhone OS 11_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/11.0 Mobile/15E148 Safari/604.1")
+	req.Header.Set("User-Agent", "Mozilla/5.0 (iPhone; CPU iPhone OS 17_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Mobile/15E148 Safari/604.1")
 	resp, err := client.Do(req)
 	if err != nil {
 		return 0
